@@ -1,0 +1,7 @@
+name: "eve-stats"
+output_dir: "docs"
+navbar:
+  title: "Eve Stats"
+  left:
+    - text: "Dead BLOPS"
+      href: dead_blops.html
