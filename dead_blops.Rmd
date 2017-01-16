@@ -1,0 +1,35 @@
+---
+title: "Dead BLOPS"
+author: "Derek Kanjus"
+date: "January 15, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+load("dead_ships.RData")
+```
+
+# A short summary of dead black ops battleships.
+
+### BLOPS type vs. estimated value
+
+The first comparison I wanted to see was "which BLOPS is the most expensive to lose?". The Sin is the clear winner for #nopoors.
+
+```{r}
+dead_blops <- dead_ships %>% select(typeName, zkb.totalValue)
+dead_blops %>% group_by(typeName) %>%
+  summarise(avg_isk_lost = mean(zkb.totalValue), median_isk_lost = median(zkb.totalValue))
+```
+
+### Which alliance has lost the most BLOPS?
+
+Let's take a look at the top 10!
+
+```{r}
+dead_blops <- dead_ships %>% select(typeName, victim.allianceName, zkb.totalValue)
+dead_blops %>% group_by(victim.allianceName) %>%
+  summarise(lost_blops = n(), avg_isk = mean(zkb.totalValue)) %>%
+  filter(victim.allianceName != "") %>% arrange(desc(lost_blops))
+```
