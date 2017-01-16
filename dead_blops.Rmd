@@ -8,6 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
+library(ggplot2)
 load("dead_ships.RData")
 ```
 
@@ -33,3 +34,14 @@ dead_blops %>% group_by(victim.allianceName) %>%
   summarise(lost_blops = n(), avg_isk = mean(zkb.totalValue)) %>%
   filter(victim.allianceName != "") %>% arrange(desc(lost_blops))
 ```
+
+### Dead BLOPS per month.
+
+```{r}
+dead_blops <- dead_ships %>% select(killID, typeName, killTime)
+dead_blops$time <- as.POSIXct(dead_blops$killTime)
+dead_blops$month <- cut(dead_blops$time, "month")
+blops_over_time <- dead_blops %>% group_by(month,typeName) %>% summarise(blops_killed = n())
+ggplot(aes(x = month, y = blops_killed, group = 1, color = typeName), data = blops_over_time) + geom_line()
+```
+
