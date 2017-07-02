@@ -1,0 +1,89 @@
+---
+title: "Dick Measuring"
+author: "Derek Kanjus"
+date: "July 1, 2017"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+My saturday-night whack at who has the most active supers & titans.
+
+## Caveats
+
+This is not a proper statistical analysis, and I have not done any significant data cleaning or interpretation. For all intents this is some simple numbers on raw data as pulled from zkill. Known factors that haven't been accounted for:
+
+1. This dataset is all activity, by pilot/corp, in 2017. Pilots change corps and supercaps change hands. This is unaccounted for.
+2. There are many significant PVP entities that I haven't bucketed as coalitions. I'm not intimately familier with these groups so :effort:. They are marked as Unaffiliated.
+3. Everyone and their cousin has supercarriers. PVE groups will appear on the KB despite not being significat PVP forces (I killed a sabre and I liked it).
+4. Syndicate Enterprise moved from NC to GL and back to NC in this time period. They're effectively double counted in the raw data. I've made my cuts in the tables below to avoid this.
+
+## Who has the most active titans?
+
+```{r titans, echo=FALSE}
+load("titan_attackers.Rda")
+
+titan_pilots <- all_attackers %>% select(characterName, corporationName, allianceName, shipTypeID) %>% distinct()
+titan_pilots$coalition <- NA
+titan_pilots[which(titan_pilots$allianceName %in% c("Goonswarm Federation","Tactical Narcotics Team","The Bastion","Get Off My Lawn","The Initiative.","Brothers in Arms Alliance")),]$coalition <- "Imperium"
+titan_pilots[which(titan_pilots$allianceName %in% c("Circle-Of-Two","Test Alliance Please Ignore","Brave Collective")),]$coalition <- "Legacy"
+titan_pilots[which(titan_pilots$allianceName %in% c("Pandemic Legion","Northern Coalition.","WAFFLES.","Pandemic Horde","PURPLE HELMETED WARRIORS")),]$coalition <- "PanFam"
+titan_pilots[which(titan_pilots$allianceName %in% c("Project.Mayhem.","Snuffed Out")),]$coalition <- "ProjectBox"
+titan_pilots[which(titan_pilots$allianceName %in% c("The-Culture")),]$coalition <- "The-Culture"
+
+titan_pilots[which(is.na(titan_pilots$coalition)),]$coalition <- "Unaffiliated"
+
+titan_pilot_count <- titan_pilots %>% group_by(coalition) %>% summarise(titan_count = n()) %>% arrange(desc(titan_count))
+titan_pilots_by_corp <- titan_pilots %>% group_by(corporationName,allianceName) %>% summarise(titan_count = n()) %>% arrange(desc(titan_count))
+```
+
+PanFam makes a strong case for the most active titans, followed closely by the Imperium.
+
+```{r, echo=FALSE}
+titan_pilot_count
+```
+
+When broken down by corp, there aren't any big surprises.
+
+```{r, echo=FALSE}
+titan_pilots_by_corp
+```
+
+## Who has the most active supercarriers?
+
+```{r supers, echo=FALSE}
+load("super_attackers.Rda")
+super_pilots <- all_attackers %>% select(characterName, corporationName, allianceName, shipTypeID) %>% distinct()
+super_pilots$coalition <- NA
+super_pilots[which(super_pilots$allianceName %in% c("Goonswarm Federation","Tactical Narcotics Team","The Bastion","Get Off My Lawn","The Initiative.","Brothers in Arms Alliance")),]$coalition <- "Imperium"
+super_pilots[which(super_pilots$allianceName %in% c("Circle-Of-Two","Test Alliance Please Ignore","Brave Collective")),]$coalition <- "Legacy"
+super_pilots[which(super_pilots$allianceName %in% c("Pandemic Legion","Northern Coalition.","WAFFLES.","Pandemic Horde","PURPLE HELMETED WARRIORS")),]$coalition <- "PanFam"
+super_pilots[which(super_pilots$allianceName %in% c("Project.Mayhem.","Snuffed Out")),]$coalition <- "ProjectBox"
+super_pilots[which(super_pilots$allianceName %in% c("The-Culture")),]$coalition <- "The-Culture"
+
+super_pilots[which(is.na(super_pilots$coalition)),]$coalition <- "Unaffiliated"
+
+super_pilot_count <- super_pilots %>% group_by(coalition) %>% summarise(super_count = n()) %>% arrange(desc(super_count))
+super_pilots_by_corp <- super_pilots %>% group_by(corporationName,allianceName) %>% summarise(super_count = n()) %>% arrange(desc(super_count))
+```
+
+There are a _proper fuck ton_ of supercarriers out there nowadays. 
+
+```{r, echo=FALSE}
+super_pilot_count
+```
+
+The corporation numbers again yield no surprises.
+
+```{r, echo=FALSE}
+super_pilots_by_corp
+```
+
+The "unaffiliated" super carrier pilots (i.e. non-mega alliances) are a much more interesting story.
+
+```{r echo=FALSE}
+super_pilots %>% filter(coalition == "Unaffiliated") %>% group_by(allianceName) %>% summarise(super_count = n()) %>% arrange(desc(super_count))
+```
+
